@@ -16,7 +16,10 @@ images_ids = ['7d4e9175-95ea-4c5f-8be5-92a6b708bb3c',
 def generate_comments(replies=True):
     comments = []
     for i in range(random.randint(1, 3)):
-        comment = { 'author': fake.name(), 'text': fake.text() }
+        comment = {
+            'author': fake.name(),
+            'text': fake.text()
+        }
         if replies:
             comment['replies'] = generate_comments(replies=False)
         comments.append(comment)
