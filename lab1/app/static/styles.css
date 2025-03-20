@@ -5,3 +5,7 @@ body {
 .avatar {
     max-width: 100%;
 }
+
+.main-text {
+    margin: 45px 0;
+}
