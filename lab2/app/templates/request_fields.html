@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{ request_fieldname }}</h1>
+    {% if request_dict %}
+        <table class="table">
+            <tbody>
+                <th>Field</th>
+                <th>Value</th>
+                {% for key, value in request_dict.items() %}
+                    <tr>
+                        <td>{{ key }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        Словарь {{ request_fieldname }} пуст
+    {% endif %}
+{% endblock %}

@@ -2,10 +2,11 @@ import random
 from flask import Flask, render_template, make_response, request
 from faker import Faker
 
+
+
 fake = Faker()
 
 app = Flask(__name__)
-application = app
 
 images_ids = ['7d4e9175-95ea-4c5f-8be5-92a6b708bb3c',
               '2d2ab7df-cdbc-48a8-a936-35bba702def5',
@@ -37,9 +38,11 @@ def generate_post(i):
 
 posts_list = sorted([generate_post(i) for i in range(5)], key=lambda p: p['date'], reverse=True)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/posts')
 def posts():
@@ -50,24 +53,36 @@ def post(index):
     p = posts_list[index]
     return render_template('post.html', title=p['title'], post=p)
 
+
 @app.route('/about')
 def about():
     return render_template('about.html', title='Об авторе')
 
 
+
 @app.route('/args')
 def args():
-    return render_template('args.html')
+    request_args = request.args
+    return render_template('request_fields.html', request_fieldname='args', request_dict=request_args)
 
 @app.route('/headers')
 def headers():
-    return render_template('headers.html')
-
+    request_headers = request.headers
+    return render_template('request_fields.html', request_fieldname='headers', request_dict=request_headers)
+    
 @app.route('/cookies')
 def cookies():
-    response = make_response(render_template('cookies.html'))
-    if 'name' not in request.cookies:
+    request_cookies = request.cookies
+    response = make_response(
+        render_template(
+            'request_fields.html',
+            request_fieldname='cookies',
+            request_dict=request_cookies
+        )
+    )
+    if 'name' not in request_cookies:
         response.set_cookie('name', 'Zadira Bob')
     else:
         response.delete_cookie('name')
+    
     return response
