@@ -86,3 +86,25 @@ def cookies():
         response.delete_cookie('name')
     
     return response
+
+@app.route('/form', methods=["GET", "POST"])
+def form():
+    return render_template('form.html')
+
+@app.route('/phone', methods=["GET", "POST"])
+def phone():
+    phone_number = None
+    formatted_number = None
+    error = None
+    
+    if request.method == "POST":
+        phone_number = request.form.get('phone', '')
+        print(phone_number)
+        print(type(phone_number))
+        print()
+        # formatted_number, error = process_phone_number(phone_number)
+            
+    return render_template(
+        'phone.html', 
+        error=error
+    )

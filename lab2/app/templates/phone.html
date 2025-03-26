@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Форма проверки номера телефона</h1>
+
+    <form class="input-form" method="POST">
+        <div>
+            <label for="phone-input">Телефон</label>
+            <input id="phone-input" type="tel" name="phone" value="{{ request.form.get('phone', '') }}">
+        </div>
+        <div>
+            <button type="submit">Проверить</button>
+        </div>
+    </form>
+    
+    <table class="table">
+        <tbody>
+            <th>Field</th>
+            <th>Value</th>
+            {% for key, value in request.form.items() %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}
