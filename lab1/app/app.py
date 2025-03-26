@@ -1,5 +1,5 @@
 import random
-from flask import Flask, render_template
+from flask import Flask, render_template, abort
 from faker import Faker
 
 fake = Faker()
@@ -47,6 +47,10 @@ def posts():
 
 @app.route('/posts/<int:index>')
 def post(index):
+    if not(0 <= index < len(posts_list)):
+        # return response with status code 404
+        abort(404)
+
     p = posts_list[index]
     return render_template('post.html', title=p['title'], post=p)
 
