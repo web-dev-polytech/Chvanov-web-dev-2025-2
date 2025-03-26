@@ -2,6 +2,15 @@ body {
     font-size: 1.25rem;
 }
 
+#page-wrapper {
+    display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+main {
+    flex-grow: 1;
+}
+
 .avatar {
     max-width: 100%;
 }
