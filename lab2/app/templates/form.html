@@ -5,15 +5,15 @@
 
     <form class="input-form" method="POST">
         <div>
-            <label for="">Тема</label>
-            <input type="text" name="theme" value="{{ request.form.get('theme', '') }}">
+            <label class="form-label" for="theme-input">Тема</label>
+            <input id="theme-input" class="form-control" type="text" name="theme" value="{{ request.form.get('theme', '') }}">
         </div>
         <div>
-            <label for="">Текст</label>
-            <textarea id="" name="text">{{ request.form.get('text', '') }}</textarea>
+            <label class="form-label" for="text-input">Текст</label>
+            <textarea id="text-input" class="form-control" name="text">{{ request.form.get('text', '') }}</textarea>
         </div>
         <div>
-            <button type="submit">Отправить</button>
+            <button class="btn btn-primary" type="submit">Отправить</button>
         </div>
     </form>
     

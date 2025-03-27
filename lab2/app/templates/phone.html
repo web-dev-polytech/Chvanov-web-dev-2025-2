@@ -4,25 +4,25 @@
     <h1>Форма проверки номера телефона</h1>
 
     <form class="input-form" method="POST">
-        <div>
-            <label for="phone-input">Телефон</label>
-            <input id="phone-input" type="tel" name="phone" value="{{ request.form.get('phone', '') }}">
+        <div class="is-invalid">
+            <label class="form-label" for="phone-input">Телефон</label>
+            <input id="phone-input" class="form-control {% if error %}is-invalid{% endif %}" type="tel" name="phone" value="{{ request.form.get('phone', '') }}" required>
+            {% if error %}
+                <div class="invalid-feedback">
+                    {{ error }}
+                </div>
+            {% endif %}
         </div>
         <div>
-            <button type="submit">Проверить</button>
+            <button class="btn btn-primary" type="submit">Проверить</button>
         </div>
     </form>
-    
-    <table class="table">
-        <tbody>
-            <th>Field</th>
-            <th>Value</th>
-            {% for key, value in request.form.items() %}
-                <tr>
-                    <td>{{ key }}</td>
-                    <td>{{ value }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+    {% if formatted_number %}
+    <div class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+        <h4 class="alert-heading">Номер прошел проверку!</h4>
+        <p>Ваш номер телефона: <strong>{{ formatted_number }}</strong></p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
 {% endblock content %}

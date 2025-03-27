@@ -1,6 +1,7 @@
 import random
-from flask import Flask, render_template, abort, make_response, request
+from flask import Flask, render_template, abort, make_response, request, flash, redirect, url_for
 from faker import Faker
+import re
 
 
 
@@ -95,20 +96,36 @@ def cookies():
 def form():
     return render_template('form.html')
 
+def _phone_check(phone: str):
+    formatless_phone = "".join(filter(str.isdigit, phone))
+    patterns = [
+        "\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}",
+        "8\(\d{3}\)\d{7}",
+        "\d{3}\.\d{3}\.\d{2}\.\d{2}"
+    ]
+    if not any(re.match(pattern, phone) for pattern in patterns):
+        raise ValueError('Недопустимый ввод. В номере телефона встречаются недопустимые символы.')
+    if not(((phone.startswith("+7") or phone.startswith("8")) and len(formatless_phone) == 11)\
+       or len(formatless_phone) == 10):
+        raise ValueError('Недопустимый ввод. Неверное количество цифр.')
+    return True
 @app.route('/phone', methods=["GET", "POST"])
 def phone():
-    phone_number = None
     formatted_number = None
     error = None
-    
     if request.method == "POST":
-        phone_number = request.form.get('phone', '')
-        print(phone_number)
-        print(type(phone_number))
-        print()
-        # formatted_number, error = process_phone_number(phone_number)
+        phone_number = request.form.get('phone', '').strip()
+        try:
+            if _phone_check(phone_number):
+                formatless_phone = "".join(filter(str.isdigit, phone_number))
+                if len(formatless_phone) == 11:
+                    formatless_phone = formatless_phone[1:]
+                formatted_number = f"8-{formatless_phone[:3]}-{formatless_phone[3:6]}-{formatless_phone[6:8]}-{formatless_phone[8:10]}"
+        except ValueError as e:
+            error = e
             
     return render_template(
-        'phone.html', 
+        'phone.html',
+        formatted_number=formatted_number,
         error=error
     )
