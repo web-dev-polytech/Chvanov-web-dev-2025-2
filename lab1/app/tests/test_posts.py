@@ -1,5 +1,4 @@
-import sys, os, re
-from datetime import datetime
+import sys, os
 import pytest
 from bs4 import BeautifulSoup
 
