@@ -103,7 +103,7 @@ def _phone_check(phone: str):
         "8\(\d{3}\)\d{7}",
         "\d{3}\.\d{3}\.\d{2}\.\d{2}"
     ]
-    if not any(re.match(pattern, phone) for pattern in patterns):
+    if not any(re.fullmatch(pattern, phone) for pattern in patterns):
         raise ValueError('Недопустимый ввод. В номере телефона встречаются недопустимые символы.')
     if not(((phone.startswith("+7") or phone.startswith("8")) and len(formatless_phone) == 11)\
        or len(formatless_phone) == 10):
