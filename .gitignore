@@ -4,6 +4,7 @@ Homework*
 
 
 .venv/
+.secret.txt
 
 *.pyc
 __pycache__/
