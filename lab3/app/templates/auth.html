@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-4">
+            {% if success %}
+                <div class="alert alert-success mt-3" role="alert">{{ success }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="alert alert-danger mt-3" role="alert">{{ error }}</div>
+            {% endif %}
+            <h1 class="mb-4">Авторизация</h1>
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label class="form-label" for="login">Логин</label>
+                    <input id="login" class="form-control {% if error %}is-invalid{% endif %}" type="text" name="login" value="{{ request.form.get('login', '') }}" required>
+                    {% if error %}
+                        <div class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    {% endif %}                    
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password">Пароль</label>
+                    <input id="password" class="form-control" type="password" name="password" required>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me" {% if request.form.get('remember_me') == 'on' %}checked{% endif %}>
+                    <label class="form-check-label" for="remember_me">Запомнить меня</label>
+                </div>
+                <button type="submit" style="width: 100%;" class="btn btn-primary mt-4 d-block">ВОЙТИ</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

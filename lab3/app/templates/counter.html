@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="row">
+    <h1 class="row justify-content-center align-items-center mt-5">
         {% if session.get('counter') %}
             Вы посетили страницу {{ session['counter'] }} раз
         {% else %}
             Вы не посещали страницу
         {% endif %}
-    </div>
+    </h1>
 {% endblock %}
