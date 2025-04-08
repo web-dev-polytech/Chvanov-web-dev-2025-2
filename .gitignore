@@ -4,6 +4,7 @@ Homework*
 
 
 .venv/
+venv/
 secret_key.py
 .secret.txt
 
