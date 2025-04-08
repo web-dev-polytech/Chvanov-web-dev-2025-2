@@ -14,11 +14,6 @@
                 <div class="mb-3">
                     <label class="form-label" for="login">Логин</label>
                     <input id="login" class="form-control {% if error %}is-invalid{% endif %}" type="text" name="login" value="{{ request.form.get('login', '') }}" required>
-                    {% if error %}
-                        <div class="invalid-feedback">
-                            {{ error }}
-                        </div>
-                    {% endif %}                    
                 </div>
                 <div class="mb-2">
                     <label class="form-label" for="password">Пароль</label>
