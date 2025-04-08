@@ -52,6 +52,11 @@ def counter():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == "GET":
+        next_page = request.args.get('next')
+        if next_page:
+            session['next'] = next_page
+
     if request.method == "POST":
         login = request.form.get('login')
         password = request.form.get('password')
@@ -62,9 +67,12 @@ def login():
                     user = User(user['id'], user['login'])
                     login_user(user, remember=remember_me)
                     flash('Вы успешно аутентифицированы', 'success')
-                    return redirect(url_for('index'))
+                    next_page = session.pop('next', None)
+                    if not next_page or next_page == '/':
+                        next_page = url_for('index')
+                    return redirect(next_page)
             return render_template('auth.html', error="Пользователь не найден, попробуйте снова.")
-
+    
     return render_template('auth.html')
 
 @app.route('/logout', methods=['GET'])
