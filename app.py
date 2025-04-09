@@ -9,3 +9,4 @@ application = DispatcherMiddleware(root_app, {
     '/lab2': lab2_app,
     '/lab3': lab3_app
 })
+app = application
