@@ -1,7 +1,7 @@
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from lab1.app import app as lab1_app
-from lab2.app import app as lab2_app
-from lab3.app import app as lab3_app
+from lab1.app.app import app as lab1_app
+from lab2.app.app import app as lab2_app
+from lab3.app.app import app as lab3_app
 from root_app.app import app as root_app
 
 application = DispatcherMiddleware(root_app, {
