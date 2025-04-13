@@ -2,6 +2,7 @@ click==8.0.4
 Faker==13.3.2
 Flask==2.0.3
 flask_login
+mysql-connector-python
 itsdangerous==2.1.1
 Jinja2==3.0.3
 MarkupSafe==2.1.1
