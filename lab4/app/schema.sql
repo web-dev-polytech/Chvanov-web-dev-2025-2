@@ -20,7 +20,7 @@ CREATE TABLE users (
 );
 
 INSERT INTO roles (id, name)
-VALUES (1, 'admin'),
+VALUES (1, 'admin');
 
 INSERT INTO users (login, first_name, last_name, password_hash, role_id)
 VALUES ('admin', 'Иванов', 'Иван', SHA2('qwerty', 256), 1);

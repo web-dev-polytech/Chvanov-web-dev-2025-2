@@ -5,6 +5,7 @@ Homework*
 
 venv/
 config.py
+test_config.py
 secret_key.py
 .secret.txt
 
