@@ -103,12 +103,19 @@ def _phone_check(phone: str):
         "8\(\d{3}\)\d{7}",
         "\d{3}\.\d{3}\.\d{2}\.\d{2}"
     ]
+    allowed = r' ()+-.'
     if not any(re.fullmatch(pattern, phone) for pattern in patterns):
-        raise ValueError('Недопустимый ввод. В номере телефона встречаются недопустимые символы.')
-    if not(((phone.startswith("+7") or phone.startswith("8")) and len(formatless_phone) == 11)\
-       or len(formatless_phone) == 10):
-        raise ValueError('Недопустимый ввод. Неверное количество цифр.')
+        for c in phone:
+            if not(c in allowed or c.isdigit()):
+                print(f'symbol {c} is not allowed')
+                raise ValueError('Недопустимый ввод. В номере телефона встречаются недопустимые символы.')
+        if not(((phone.startswith("+7") or phone.startswith("8")) and len(formatless_phone) == 11)\
+          or len(formatless_phone) == 10):
+            print(f'len of string {phone} is {len(phone)}\nlen of formatless sting {formatless_phone} is {len(formatless_phone)}')
+            raise ValueError('Недопустимый ввод. Неверное количество цифр.')
+        raise ValueError('Недопустимый ввод. Номер не соответствует ни одному из шаблонов.')
     return True
+
 @app.route('/phone', methods=["GET", "POST"])
 def phone():
     formatted_number = None
