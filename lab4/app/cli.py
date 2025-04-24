@@ -8,7 +8,9 @@ def init_db_command():
     with current_app.open_resource('schema.sql') as f:
         connection = db.connect()
         with connection.cursor() as cursor:
-            for _ in cursor.execute(f.read().decode('utf8'), multi=True):
-                pass
+            sql_commands = f.read().decode('utf8').split(';')
+            for command in sql_commands:
+                if command.strip():
+                    cursor.execute(command)
         connection.commit()
     click.echo('Initialized the database.')
