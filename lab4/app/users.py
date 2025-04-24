@@ -29,7 +29,7 @@ def new():
     user_data = {}
     if request.method == 'POST':
         # !!!
-        fields = ('username', 'password', 'first_name', 'middle_name', 'last_name', 'role_id')
+        fields = ('login', 'password', 'first_name', 'middle_name', 'last_name', 'role_id')
         user_data = { field: request.form.get(field) or None for field in fields }
         try:
             user_repository.create(**user_data)

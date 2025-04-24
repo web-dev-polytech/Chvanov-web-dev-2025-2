@@ -18,7 +18,6 @@ class UserRepository:
     def all(self):
         with self.db_connector.connect().cursor(named_tuple=True) as cursor:
             cursor.execute("SELECT users.*, roles.name AS role FROM users LEFT JOIN roles ON users.role_id = roles.id")
-            print(cursor.statement)
             users = cursor.fetchall()
         return users
     

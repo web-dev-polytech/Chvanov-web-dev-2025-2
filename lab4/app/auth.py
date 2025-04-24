@@ -40,7 +40,7 @@ def login():
             next_url = request.args.get('next', url_for('index'))
             return redirect(next_url)
         flash('Неправильный логин или пароль', 'danger')
-    return render_template('auth/login.html')
+    return render_template('auth/auth.html')
 
 @bp.route('/logout', methods=['GET'])
 def logout():
