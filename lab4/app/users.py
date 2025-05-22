@@ -3,6 +3,7 @@ from flask_login import login_required
 import mysql.connector as connector
 
 from .repositories import UserRepository, RoleRepository
+from .utils import check_login, check_password
 from . import db
 
 user_repository = UserRepository(db)
@@ -26,11 +27,18 @@ def show(user_id):
 @bp.route('/new', methods = ['POST', 'GET'])
 @login_required
 def new():
-    user_data = {}
+    user_data, errors = {}, {}
     if request.method == 'POST':
-        # !!!
         fields = ('login', 'password', 'first_name', 'middle_name', 'last_name', 'role_id')
         user_data = { field: request.form.get(field) or None for field in fields }
+        try: check_login(user_data['login'])
+        except ValueError as e:
+            errors['login'] = str(e)
+        try: check_password(user_data['password'])
+        except ValueError as e:
+            errors['password'] = str(e)
+        if errors:
+            return render_template('users/new.html', user_data=user_data, roles=role_repository.all(), errors=errors)
         try:
             user_repository.create(**user_data)
             flash('Учетная запись успешно создана', 'success')
@@ -38,7 +46,7 @@ def new():
         except connector.errors.DatabaseError:
             flash('Произошла ошибка при создании записи. Проверьте, что все необходимые поля заполнены', 'danger')
             db.connect().rollback()
-    return render_template('users/new.html', user_data=user_data, roles=role_repository.all())
+    return render_template('users/new.html', user_data=user_data, roles=role_repository.all(), errors=errors)
 
 @bp.route('/<int:user_id>/delete', methods = ['POST'])
 @login_required
@@ -68,4 +76,4 @@ def edit(user_id):
             db.connect().rollback()
             user = user_data
 
-    return render_template('users/edit.html', user_data=user, roles=role_repository.all())
+    return render_template('users/edit.html', user_data=user, roles=role_repository.all(), error=None)

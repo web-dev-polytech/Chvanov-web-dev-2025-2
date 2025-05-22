@@ -26,8 +26,8 @@
                 <td> {{ user.role }} </td>
                 <td> {{ user.created_at}} </td>
                 <td>
+                  <a class="btn btn-primary" href="{{ url_for('users.show', user_id=user.id) }}">View</a>
                   {% if current_user.is_authenticated %}
-                    <a class="btn btn-primary" href="{{ url_for('users.show', user_id=user.id) }}">View</a>
                     <a class="btn btn-primary" href="{{ url_for('users.edit', user_id=user.id) }}">Edit</a>
                     <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ user.id }}">Delete</button>
                   {% endif %}

@@ -1,18 +1,33 @@
-{% macro user_form(roles, action, user_data={}) %}
+{% macro user_form(roles, action, user_data={}, errors={}) %}
   <form method="post">
     {% if action == 'new' %}
       <div class="mb-3">
         <label for="login" class="form-label">Логин</label>
-        <input type="text" name="login" id="login" class="form-control" value="{{ user_data.login or '' }}">
+        <input type="text" name="login" id="login"
+               class="form-control {% if errors and errors.get('login') %}is-invalid{% endif %}"
+               value="{{ user_data.login or '' }}" required>
+        {% if errors and errors.get('login') %}
+          <div class="invalid-feedback">
+            {{ errors['login'] }}
+          </div>
+        {% endif %}
       </div>
       <div class="mb-3">
         <label for="password" class="form-label">Пароль</label>
-        <input type="password" name="password" id="password" class="form-control" value="{{ user_data.password or '' }}">
+        <input type="password" name="password" id="password"
+               class="form-control {% if errors and errors.get('password') %}is-invalid{% endif %}"
+               value="{{ user_data.password or '' }}" required>
+        {% if errors and errors.get('password') %}
+          <div class="invalid-feedback">
+            {{ errors['password'] }}
+          </div>
+        {% endif %}
       </div>
     {% endif %}
+
     <div class="mb-3">
       <label for="first_name" class="form-label">Имя</label>
-      <input type="text" name="first_name" id="first_name" class="form-control" value="{{ user_data.first_name or '' }}">
+      <input type="text" name="first_name" id="first_name" class="form-control" value="{{ user_data.first_name or '' }}" required>
     </div>
     <div class="mb-3">
       <label for="middle_name" class="form-label">Отчество (опционально)</label>
@@ -20,7 +35,7 @@
     </div>
     <div class="mb-3">
       <label for="last_name" class="form-label">Фамилия</label>
-      <input type="text" name="last_name" id="last_name" class="form-control" value="{{ user_data.last_name or '' }}">
+      <input type="text" name="last_name" id="last_name" class="form-control" value="{{ user_data.last_name or '' }}" required>
     </div>
     <div class="mb-3">
       <label for="role_id" class="form-label">Роль</label>

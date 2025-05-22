@@ -11,7 +11,6 @@ class RoleRepository:
         with self.db_connector.connect().cursor(dictionary=True) as cursor:
             cursor.execute("SELECT * FROM roles")
             roles_data = cursor.fetchall()
-            print(roles_data)
             roles = []
             for role_data in roles_data:
                 roles.append(Role(role_data['id'], role_data['name']))
