@@ -20,7 +20,7 @@ def show(user_id):
     if user is None:
         flash('Пользователя нет в базе данных', 'danger')
         return redirect(url_for('users.index'))
-    user_role = role_repository.get_by_id(user.role_id)
+    user_role = role_repository.get_by_id(user['role_id'])
     return render_template('users/show.html', user_data=user, user_role=getattr(user_role, 'name', ''))
 
 @bp.route('/new', methods = ['POST', 'GET'])

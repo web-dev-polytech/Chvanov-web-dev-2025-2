@@ -14,7 +14,7 @@ class RoleRepository:
             print(roles_data)
             roles = []
             for role_data in roles_data:
-                roles.append(Role(role_data.id, role_data.name))
+                roles.append(Role(role_data['id'], role_data['name']))
             return roles
 
     def get_by_id(self, role_id):
@@ -22,5 +22,5 @@ class RoleRepository:
             cursor.execute("SELECT * FROM roles WHERE id = %s", (role_id,))
             role_data = cursor.fetchone()
             if role_data:
-                return Role(role_data.id, role_data.name)
+                return Role(role_data['id'], role_data['name'])
             return None

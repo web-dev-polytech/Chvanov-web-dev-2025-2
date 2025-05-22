@@ -36,7 +36,7 @@ def login():
         
         if user is not None:
             flash('Вы успешно аутентифицированы', 'success')
-            login_user(User(user.id, user.login), remember=remember_me)
+            login_user(User(user['id'], user['login']), remember=remember_me)
             next_url = request.args.get('next', url_for('index'))
             return redirect(next_url)
         flash('Неправильный логин или пароль', 'danger')
