@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Blueprint, request, render_template, url_for, flash, redirect
+from flask import Blueprint, request, render_template, url_for, flash, redirect, session
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from .repositories import UserRepository
 from . import db
@@ -27,18 +27,22 @@ def load_user(user_id):
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == "GET":
+        next_page = request.args.get('next')
+        if next_page:
+            session['next'] = next_page
     if request.method == "POST":
         login = request.form.get('login')
         password = request.form.get('password')
         remember_me = request.form.get('remember_me') == 'on'
-        
         user = user_repository.get_by_login_and_password(login, password)
-        
         if user is not None:
-            flash('Вы успешно аутентифицированы', 'success')
             login_user(User(user['id'], user['login']), remember=remember_me)
-            next_url = request.args.get('next', url_for('index'))
-            return redirect(next_url)
+            flash('Вы успешно аутентифицированы', 'success')
+            next_page = session.pop('next', None)
+            if not next_page or next_page == '/':
+                next_page = url_for('index')
+            return redirect(next_page)
         flash('Неправильный логин или пароль', 'danger')
     return render_template('auth/auth.html')
 
