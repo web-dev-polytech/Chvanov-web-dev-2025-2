@@ -8,7 +8,7 @@ class RoleRepository:
         self.db_connector = db_connector
 
     def all(self):
-        with self.db_connector.connect().cursor(named_tuple=True) as cursor:
+        with self.db_connector.connect().cursor(dictionary=True) as cursor:
             cursor.execute("SELECT * FROM roles")
             roles_data = cursor.fetchall()
             print(roles_data)
@@ -18,7 +18,7 @@ class RoleRepository:
             return roles
 
     def get_by_id(self, role_id):
-        with self.db_connector.connect().cursor(named_tuple=True) as cursor:
+        with self.db_connector.connect().cursor(dictionary=True) as cursor:
             cursor.execute("SELECT * FROM roles WHERE id = %s", (role_id,))
             role_data = cursor.fetchone()
             if role_data:
