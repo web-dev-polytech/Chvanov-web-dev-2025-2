@@ -2,7 +2,7 @@ from functools import wraps
 from flask import Blueprint, request, render_template, url_for, flash, redirect
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from .repositories import UserRepository
-from app import db
+from . import db
 
 user_repository = UserRepository(db)
 

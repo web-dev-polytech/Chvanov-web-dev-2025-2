@@ -3,7 +3,7 @@ from flask_login import login_required
 import mysql.connector as connector
 
 from .repositories import UserRepository, RoleRepository
-from app import db
+from . import db
 
 user_repository = UserRepository(db)
 role_repository = RoleRepository(db)

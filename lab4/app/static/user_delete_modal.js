@@ -6,6 +6,7 @@ function modalShown(event) {
     let newUrl = `/users/${userId}/delete`;
     let form = document.getElementById('deleteModalForm');
     form.action = newUrl;
+    form.method = 'POST'; // Ensure method is POST
 }
 
 let modal = document.getElementById('deleteModal');

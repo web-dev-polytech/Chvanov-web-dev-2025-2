@@ -14,13 +14,13 @@ class UserRepository:
             user = cursor.fetchone()
         return user
 
-
     def all(self):
         with self.db_connector.connect().cursor(named_tuple=True) as cursor:
             cursor.execute("SELECT users.*, roles.name AS role FROM users LEFT JOIN roles ON users.role_id = roles.id")
+            print(cursor.statement)
             users = cursor.fetchall()
         return users
-    
+
     def create(self, login, password, first_name, middle_name, last_name, role_id):
         connection = self.db_connector.connect()
         with connection.cursor(named_tuple=True) as cursor:
