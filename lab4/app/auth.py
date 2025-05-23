@@ -1,7 +1,8 @@
-from functools import wraps
 from flask import Blueprint, request, render_template, url_for, flash, redirect, session
-from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
+from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user, login_required
+
 from .repositories import UserRepository
+from .utils import check_password
 from . import db
 
 user_repository = UserRepository(db)
@@ -17,7 +18,7 @@ class User(UserMixin):
     def __init__(self, user_id, login):
         self.id = user_id
         self.login = login
-        
+
 @login_manager.user_loader
 def load_user(user_id):
     user = user_repository.get_by_id(user_id)
@@ -48,6 +49,30 @@ def login():
 
 @bp.route('/logout', methods=['GET'])
 def logout():
+    if current_user.is_authenticated:
+        flash('Вы вышли из аккаунта', 'info')
     logout_user()
-    flash('Вы вышли из аккаунта', 'info')
     return redirect(url_for('index'))
+
+@bp.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    errors = {}
+    fields = ('old_password', 'new_password', 'confirm_password')
+    form_passwords = { field: request.form.get(field) or None for field in fields }
+    if request.method == "POST":
+        if not user_repository.check_password(current_user.login, form_passwords['old_password']):
+            errors['old_password'] = 'Старый пароль неверен'
+        try: check_password(form_passwords['new_password'])
+        except ValueError as e:
+            errors['new_password'] = str(e)
+            return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
+        if form_passwords['new_password'] == form_passwords['confirm_password']:
+            user_repository.update_password(current_user.get_id(), form_passwords['new_password'])
+            flash('Пароль успешно изменен', 'success')
+            return redirect(url_for('index'))
+        else:
+            errors['confirm_password'] = 'Пароли не совпадают'
+        if errors:
+            return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
+    return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
