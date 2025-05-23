@@ -67,12 +67,10 @@ def change_password():
         except ValueError as e:
             errors['new_password'] = str(e)
             return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
-        if form_passwords['new_password'] == form_passwords['confirm_password']:
+        if form_passwords['new_password'] != form_passwords['confirm_password']:
+            errors['confirm_password'] = 'Пароли не совпадают'
+        if not errors:
             user_repository.update_password(current_user.get_id(), form_passwords['new_password'])
             flash('Пароль успешно изменен', 'success')
             return redirect(url_for('index'))
-        else:
-            errors['confirm_password'] = 'Пароли не совпадают'
-        if errors:
-            return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
     return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
