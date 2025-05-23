@@ -2,12 +2,11 @@
 
 function modalShown(event) {
     let button = event.relatedTarget;
-    let userId = button.dataset.userId;
     let fullname = button.dataset.userFullname;
-    let newUrl = `/users/${userId}/delete`;
+    let deleteUrl = button.dataset.deleteUrl;
     let form = document.getElementById('deleteModalForm');
     document.getElementById('deleteUserFullname').textContent = fullname;
-    form.action = newUrl;
+    form.action = deleteUrl;
 }
 
 let modal = document.getElementById('deleteModal');
