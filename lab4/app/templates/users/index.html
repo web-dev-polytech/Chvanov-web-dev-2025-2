@@ -29,7 +29,7 @@
                   <a class="btn btn-primary" href="{{ url_for('users.show', user_id=user.id) }}">View</a>
                   {% if current_user.is_authenticated %}
                     <a class="btn btn-primary" href="{{ url_for('users.edit', user_id=user.id) }}">Edit</a>
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ user.id }}">Delete</button>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ user.id }}" data-user-fullname="{{ user.last_name }} {{ user.first_name }}{% if user.middle_name %} {{ user.middle_name }}{% endif %}">Delete</button>
                   {% endif %}
                 </td>
             </tr>
@@ -47,7 +47,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        Вы уверены, что хотите удалить данную учетную запись?
+        Вы уверены, что хотите удалить пользователя <b><span id="deleteUserFullname"></span></b>?
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>

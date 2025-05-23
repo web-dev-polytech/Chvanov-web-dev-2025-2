@@ -66,7 +66,6 @@ def change_password():
         try: check_password(form_passwords['new_password'])
         except ValueError as e:
             errors['new_password'] = str(e)
-            return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
         if form_passwords['new_password'] != form_passwords['confirm_password']:
             errors['confirm_password'] = 'Пароли не совпадают'
         if not errors:
