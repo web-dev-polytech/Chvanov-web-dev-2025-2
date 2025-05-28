@@ -56,9 +56,10 @@ class UserRepository:
             return cursor.fetchone() is not None
 
     def update_password(self, user_id, new_password):
-        with self.db_connector.connect().cursor(dictionary=True) as cursor:
+        connection = self.db_connector.connect()
+        with connection.cursor(dictionary=True) as cursor:
             cursor.execute(
                 "UPDATE users SET password_hash = SHA2(%s, 256) WHERE id = %s",
                 (new_password, user_id)
             )
-            self.db_connector.connect().commit()
+            connection.commit()
