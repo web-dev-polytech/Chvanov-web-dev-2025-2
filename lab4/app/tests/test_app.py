@@ -1,7 +1,6 @@
 import os
 import sys
 import pytest
-from unittest.mock import patch, MagicMock
 
 # Add the project root to the path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
@@ -14,7 +13,6 @@ from lab4.app.utils import check_login, check_password
 
 @pytest.fixture
 def app():
-    """Create application for testing."""
     test_config = {
         'TESTING': True,
         'WTF_CSRF_ENABLED': False,
@@ -30,26 +28,23 @@ def app():
 
 @pytest.fixture
 def client(app):
-    """Test client for the Flask application."""
     return app.test_client()
 
 
 @pytest.fixture
-def mock_db_connector():
-    """Mock database connector to avoid real database calls."""
-    with patch('lab4.app.db.DBConnector.connect') as mock_connect:
-        mock_connection = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
-        mock_cursor.__exit__ = MagicMock(return_value=None)
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connect.return_value = mock_connection
-        yield mock_cursor
+def mock_db_connector(mocker):
+    mock_connect = mocker.patch('lab4.app.db.DBConnector.connect')
+    mock_connection = mocker.MagicMock()
+    mock_cursor = mocker.MagicMock()
+    mock_cursor.__enter__ = mocker.MagicMock(return_value=mock_cursor)
+    mock_cursor.__exit__ = mocker.MagicMock(return_value=None)
+    mock_connection.cursor.return_value = mock_cursor
+    mock_connect.return_value = mock_connection
+    return mock_cursor
 
 
 @pytest.fixture
 def sample_user():
-    """Sample user data for testing."""
     return {
         'id': 1,
         'login': 'testuser',
@@ -62,7 +57,6 @@ def sample_user():
 
 @pytest.fixture
 def sample_role():
-    """Sample role data for testing."""
     return {
         'id': 1,
         'name': 'admin',
@@ -353,10 +347,10 @@ def test_check_password_with_spaces():
 
 # --- Repository tests ---
 
-def test_user_repository_get_by_id(mock_db_connector, sample_user):
+def test_user_repository_get_by_id(mocker, sample_user):
     from lab4.app.db import DBConnector
     
-    mock_db = MagicMock(spec=DBConnector)
+    mock_db = mocker.MagicMock(spec=DBConnector)
     user_repo = UserRepository(mock_db)
     
     mock_db.connect.return_value.cursor.return_value.__enter__.return_value.fetchone.return_value = sample_user
@@ -365,11 +359,11 @@ def test_user_repository_get_by_id(mock_db_connector, sample_user):
     assert result == sample_user
 
 
-def test_user_repository_get_by_login_and_password(mock_db_connector, sample_user):
+def test_user_repository_get_by_login_and_password(mocker, sample_user):
     """Test UserRepository get_by_login_and_password method."""
     from lab4.app.db import DBConnector
     
-    mock_db = MagicMock(spec=DBConnector)
+    mock_db = mocker.MagicMock(spec=DBConnector)
     user_repo = UserRepository(mock_db)
     
     mock_db.connect.return_value.cursor.return_value.__enter__.return_value.fetchone.return_value = sample_user
@@ -378,11 +372,11 @@ def test_user_repository_get_by_login_and_password(mock_db_connector, sample_use
     assert result == sample_user
 
 
-def test_role_repository_all(mock_db_connector, sample_role):
+def test_role_repository_all(mocker, sample_role):
     """Test RoleRepository all method."""
     from lab4.app.db import DBConnector
     
-    mock_db = MagicMock(spec=DBConnector)
+    mock_db = mocker.MagicMock(spec=DBConnector)
     role_repo = RoleRepository(mock_db)
     
     mock_db.connect.return_value.cursor.return_value.__enter__.return_value.fetchall.return_value = [sample_role]
