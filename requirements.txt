@@ -10,3 +10,6 @@ python-dateutil==2.8.2
 six==1.16.0
 Werkzeug==2.0.3
 gunicorn
+mysql-connector-python
+flask-sqlalchemy
+flask-migrate
