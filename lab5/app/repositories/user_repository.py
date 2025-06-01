@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
 from typing import Optional, List
 
-from app.models import User
+from ..models import User
 
 class UserRepository:
     def __init__(self, db_connector: SQLAlchemy):

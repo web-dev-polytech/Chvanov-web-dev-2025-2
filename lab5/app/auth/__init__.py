@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, url_for, flash, redirect,
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from .checkers import check_password
 
-from app.repositories import get_repository
+from ..repositories import get_repository
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 

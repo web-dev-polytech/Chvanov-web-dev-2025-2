@@ -2,8 +2,8 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from app.repositories import get_repository
-from app.auth.checkers import check_login, check_password
+from .repositories import get_repository
+from .auth.checkers import check_login, check_password
 
 user_repository = get_repository('users')
 role_repository = get_repository('roles')

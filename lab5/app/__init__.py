@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_migrate import Migrate
 
-from app.models import db
+from .models import db
 
 migrate = Migrate()
 
@@ -15,11 +15,11 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.auth import bp, login_manager
+    from .auth import bp, login_manager
     app.register_blueprint(bp)
     login_manager.init_app(app)
 
-    from app import users
+    from . import users
     app.register_blueprint(users.bp)
     app.route('/', endpoint='index')(users.index)
 

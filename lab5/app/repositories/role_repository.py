@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from typing import Optional, List
 
-from app.models import Role
+from ..models import Role
 
 class RoleRepository:
     def __init__(self, db_connector: SQLAlchemy):
