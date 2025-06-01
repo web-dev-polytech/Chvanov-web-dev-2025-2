@@ -7,7 +7,7 @@ migrate = Migrate()
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=False)
-    app.config.from_pyfile('test_config.py', silent=False)
+    app.config.from_pyfile('config.py', silent=False)
 
     if test_config:
         app.config.from_mapping(test_config)
