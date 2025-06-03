@@ -3,6 +3,7 @@ from flask_login import login_required
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from .repositories import get_repository
+from .auth import check_rights
 from .auth.checkers import check_login, check_password
 
 user_repository = get_repository('users')
@@ -15,6 +16,8 @@ def index():
     return render_template('users/index.html', users=user_repository.all())
 
 @bp.route('/<int:user_id>')
+@login_required
+@check_rights('users', 'show')
 def show(user_id):
     user = user_repository.get_by_id(user_id)
     if user is None:
@@ -25,9 +28,10 @@ def show(user_id):
                          user_data=user, 
                          user_role=user_role.name if user_role else '')
 
-@bp.route('/new', methods=['POST', 'GET'])
+@bp.route('/create', methods=['POST', 'GET'])
 @login_required
-def new():
+@check_rights('users', 'create')
+def create():
     user_data, errors = {}, {}
     if request.method == 'POST':
         fields = ('login', 'password', 'first_name', 'middle_name', 'last_name', 'role_id')
@@ -41,7 +45,7 @@ def new():
         except ValueError as e:
             errors['password'] = str(e)
         if errors:
-            return render_template('users/new.html', 
+            return render_template('users/create.html', 
                                  user_data=user_data, 
                                  roles=role_repository.all(), 
                                  errors=errors)
@@ -50,16 +54,19 @@ def new():
             flash('Учетная запись успешно создана', 'success')
             return redirect(url_for('users.index'))
         except IntegrityError as e:
+            user_repository.rollback()
             flash('Пользователь с таким логином уже существует', 'danger')
         except SQLAlchemyError as e:
+            user_repository.rollback()
             flash('Произошла ошибка при создании записи. Попробуйте снова', 'danger')
-    return render_template('users/new.html', 
+    return render_template('users/create.html', 
                          user_data=user_data, 
                          roles=role_repository.all(), 
                          errors=errors)
 
 @bp.route('/<int:user_id>/delete', methods=['POST'])
 @login_required
+@check_rights('users', 'delete')
 def delete(user_id):
     try:
         if user_repository.delete(user_id):
@@ -67,11 +74,13 @@ def delete(user_id):
         else:
             flash('Пользователь не найден', 'warning')
     except SQLAlchemyError:
+        user_repository.rollback()
         flash('Произошла ошибка при удалении записи', 'danger')
     return redirect(url_for('users.index'))
 
 @bp.route('/<int:user_id>/edit', methods=['POST', 'GET'])
 @login_required
+@check_rights('users', 'edit')
 def edit(user_id):
     user = user_repository.get_by_id(user_id)
     if user is None:
@@ -85,6 +94,7 @@ def edit(user_id):
             flash('Учетная запись успешно изменена', 'success')
             return redirect(url_for('users.index'))
         except SQLAlchemyError:
+            user_repository.rollback()
             flash('Произошла ошибка при изменении записи', 'danger')
             for field in fields:
                 setattr(user, field, user_data[field])

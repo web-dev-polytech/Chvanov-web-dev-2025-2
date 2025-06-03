@@ -1,8 +1,14 @@
 from flask import Blueprint, request, render_template, url_for, flash, redirect, session
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from functools import wraps
 from .checkers import check_password
+from .policies.users_policy import UsersPolicy
 
 from ..repositories import get_repository
+
+policies = {
+    'users': UsersPolicy
+}
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -67,3 +73,18 @@ def change_password():
             flash('Пароль успешно изменен', 'success')
             return redirect(url_for('index'))
     return render_template('auth/change_password.html', form_passwords=form_passwords, errors=errors)
+
+def user_allowed(resource, action, **kwargs):
+    policy = policies[resource](**kwargs)
+    return getattr(policy, action, lambda: False)()
+
+def check_rights(resource, action):
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            if not user_allowed(resource, action, **kwargs):
+                flash('У вас недостаточно прав для доступа к данной странице.', 'warning')
+                return redirect(url_for('users.index'))
+            return function(*args, **kwargs)
+        return wrapper
+    return decorator

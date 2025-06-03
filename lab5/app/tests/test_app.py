@@ -119,7 +119,7 @@ def test_logout(client, mock_db_connector, sample_user):
 # --- User creation tests ---
 
 def test_create_user_page_requires_login(client):
-    response = client.get('/users/new')
+    response = client.get('/users/create')
     assert response.status_code == 302
 
 
@@ -129,7 +129,7 @@ def test_create_user_success(client, mock_db_connector, sample_user, sample_role
     
     client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
     
-    response = client.post('/users/new', data={
+    response = client.post('/users/create', data={
         'login': 'newuser12345',
         'password': 'ValidPass1!',
         'first_name': 'Анна',
@@ -146,7 +146,7 @@ def test_create_user_invalid_login_short(client, mock_db_connector, sample_user,
     
     client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
     
-    response = client.post('/users/new', data={
+    response = client.post('/users/create', data={
         'login': 'abc',
         'password': 'ValidPass1!',
         'first_name': 'Тест',
@@ -162,7 +162,7 @@ def test_create_user_invalid_password(client, mock_db_connector, sample_user, sa
     # Login first
     client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
     
-    response = client.post('/users/new', data={
+    response = client.post('/users/create', data={
         'login': 'validuser123',
         'password': '123',
         'first_name': 'Тест',

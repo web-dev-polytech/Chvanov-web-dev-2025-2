@@ -6,13 +6,13 @@
     <thead>
         <tr>
             <th> № </th>
-            <th> username </th>
-            <th> last_name </th>
-            <th> first_name </th>
-            <th> middle_name </th>
-            <th> role </th>
-            <th> created_at </th>
-            <th> actions </th>
+            <th> Username </th>
+            <th> Lastname </th>
+            <th> Firstname </th>
+            <th> Middlename </th>
+            <th> Role </th>
+            <th> Created At </th>
+            <th> Actions </th>
         </tr>
     </thead>
     <tbody>
@@ -25,10 +25,14 @@
                 <td> {% if user.middle_name %} {{ user.middle_name }} {% endif %} </td>
                 <td> {{ user.role.name }} </td>
                 <td> {{ user.created_at}} </td>
-                <td>
-                  <a class="btn btn-primary" href="{{ url_for('users.show', user_id=user.id) }}">View</a>
-                  {% if current_user.is_authenticated %}
+                <td class="user-buttons">
+                  {% if user_allowed('users', 'show', user_id=user.id) %}
+                    <a class="btn btn-primary" href="{{ url_for('users.show', user_id=user.id) }}">Show</a>
+                  {% endif %}
+                  {% if user_allowed('users', 'edit', user_id=user.id) %}
                     <a class="btn btn-primary" href="{{ url_for('users.edit', user_id=user.id) }}">Edit</a>
+                  {% endif %}
+                  {% if user_allowed('users', 'delete', user_id=user.id) %}
                     <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ user.id }}" data-user-fullname="{{ user.last_name }} {{ user.first_name }}{% if user.middle_name %} {{ user.middle_name }}{% endif %}" data-delete-url="{{ url_for('users.delete', user_id=user.id) }}">Delete</button>
                   {% endif %}
                 </td>
@@ -36,8 +40,8 @@
         {% endfor %}
     </tbody>
 </table>
-{% if current_user.is_authenticated %}
-    <a href="{{ url_for('users.new') }}" class="btn btn-primary">Добавить пользователя</a>
+{% if user_allowed('users', 'create') %}
+    <a href="{{ url_for('users.create') }}" class="btn btn-primary">Добавить пользователя</a>
 {% endif %}
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog">

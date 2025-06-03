@@ -35,13 +35,13 @@ class UserRepository:
         self.db_connector.session.commit()
         return user
 
-    def update(self, user_id: int, first_name: str, middle_name: Optional[str], last_name: str, role_id: int) -> Optional[User]:
+    def update(self, user_id: int, first_name: str, middle_name: Optional[str], last_name: str, role_id: Optional[int]) -> Optional[User]:
         user = self.get_by_id(user_id)
         if user:
             user.first_name = first_name
             user.middle_name = middle_name
             user.last_name = last_name
-            user.role_id = role_id
+            user.role_id = role_id if role_id else user.role_id
             self.db_connector.session.commit()
         return user
 
@@ -71,3 +71,7 @@ class UserRepository:
             user.set_password(new_password)
             self.db_connector.session.commit()
         return user
+    
+    def rollback(self):
+        self.db_connector.session.rollback()
+
