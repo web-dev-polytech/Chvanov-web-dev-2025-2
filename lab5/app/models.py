@@ -1,5 +1,4 @@
-import os
-from typing import Optional, Union, List
+from typing import Optional, List
 from datetime import datetime
 import sqlalchemy
 from flask_login import UserMixin
@@ -24,7 +23,7 @@ db = SQLAlchemy(model_class=Base)
 class Role(Base):
     __tablename__ = 'roles'
     
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(25), nullable=False)
     description: Mapped[str] = mapped_column(Text)
 
@@ -33,16 +32,17 @@ class Role(Base):
 class User(Base, UserMixin):
     __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     login: Mapped[str] = mapped_column(String(25), unique=True, nullable=False)
     first_name: Mapped[str] = mapped_column(String(25), nullable=False)
     last_name: Mapped[str] = mapped_column(String(25), nullable=False)
     middle_name: Mapped[Optional[str]] = mapped_column(String(25), default=None, nullable=True)
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(server_default=sqlalchemy.sql.func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=sqlalchemy.sql.func.now(), nullable=False)
 
     role_id: Mapped[int] = mapped_column(ForeignKey('roles.id'), nullable=False)
     role: Mapped["Role"] = relationship("Role", back_populates="users")
+    visit_logs: Mapped[List["VisitLogs"]] = relationship("VisitLogs", back_populates="user")
 
     def __repr__(self):
         return f"{self.__class__.__name__}(id={self.id}, login='{self.login}', first_name='{self.first_name}', last_name='{self.last_name}')"
@@ -56,3 +56,13 @@ class User(Base, UserMixin):
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
+
+class VisitLogs(Base):
+    __tablename__ = 'visit_logs'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    path: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=sqlalchemy.sql.func.now(), nullable=False)
+
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey('users.id'), nullable=True)
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="visit_logs")
