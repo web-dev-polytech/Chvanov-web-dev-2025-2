@@ -10,7 +10,10 @@ def authentication_required(func):
     return wrapper
 
 class BasePolicy:
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.user_id = kwargs.get('user_id')
+
+    def get_page(self):
         raise NotImplementedError
 
     def create(self):
@@ -24,3 +27,14 @@ class BasePolicy:
 
     def delete(self):
         raise NotImplementedError
+
+    def _allow_only(self, role: str) -> bool:
+        return current_user.role.name == role
+
+    def _admin_all_user_self(self) -> bool:
+        if current_user.role.name == 'admin':
+            return True
+        if current_user.role.name == 'user':
+            assert self.user_id is not None
+            return current_user.id == self.user_id
+        return False

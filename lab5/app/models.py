@@ -42,7 +42,7 @@ class User(Base, UserMixin):
 
     role_id: Mapped[int] = mapped_column(ForeignKey('roles.id'), nullable=False)
     role: Mapped["Role"] = relationship("Role", back_populates="users")
-    visit_logs: Mapped[List["VisitLogs"]] = relationship("VisitLogs", back_populates="user")
+    visit_logs: Mapped[List["VisitLog"]] = relationship("VisitLog", back_populates="user")
 
     def __repr__(self):
         return f"{self.__class__.__name__}(id={self.id}, login='{self.login}', first_name='{self.first_name}', last_name='{self.last_name}')"
@@ -57,7 +57,7 @@ class User(Base, UserMixin):
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
 
-class VisitLogs(Base):
+class VisitLog(Base):
     __tablename__ = 'visit_logs'
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -66,3 +66,7 @@ class VisitLogs(Base):
 
     user_id: Mapped[Optional[int]] = mapped_column(ForeignKey('users.id'), nullable=True)
     user: Mapped[Optional["User"]] = relationship("User", back_populates="visit_logs")
+
+    @property
+    def created_at_formated(self):
+        return self.created_at.strftime('%d.%m.%Y %H:%M:%S')

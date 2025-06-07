@@ -13,7 +13,12 @@ bp = Blueprint('users', __name__, url_prefix='/users')
 
 @bp.route('/')
 def index():
-    return render_template('users/index.html', users=user_repository.all())
+    sort = True
+    pagination = user_repository.get_pagination_info(sort=sort)
+    users = user_repository.all(pagination=pagination, sort=sort)
+    return render_template('users/index.html',
+                            pagination=pagination,
+                            users=users)
 
 @bp.route('/<int:user_id>')
 @login_required
@@ -23,10 +28,9 @@ def show(user_id):
     if user is None:
         flash('Пользователя нет в базе данных', 'danger')
         return redirect(url_for('users.index'))
-    user_role = role_repository.get_by_id(user.role_id)
     return render_template('users/show.html', 
-                         user_data=user, 
-                         user_role=user_role.name if user_role else '')
+                            user_data=user, 
+                            user_role=user.role.name)
 
 @bp.route('/create', methods=['POST', 'GET'])
 @login_required
@@ -46,9 +50,9 @@ def create():
             errors['password'] = str(e)
         if errors:
             return render_template('users/create.html', 
-                                 user_data=user_data, 
-                                 roles=role_repository.all(), 
-                                 errors=errors)
+                                    user_data=user_data, 
+                                    roles=role_repository.all(), 
+                                    errors=errors)
         try:
             user_repository.create(**user_data)
             flash('Учетная запись успешно создана', 'success')
@@ -60,9 +64,9 @@ def create():
             user_repository.rollback()
             flash('Произошла ошибка при создании записи. Попробуйте снова', 'danger')
     return render_template('users/create.html', 
-                         user_data=user_data, 
-                         roles=role_repository.all(), 
-                         errors=errors)
+                            user_data=user_data, 
+                            roles=role_repository.all(), 
+                            errors=errors)
 
 @bp.route('/<int:user_id>/delete', methods=['POST'])
 @login_required
@@ -99,5 +103,5 @@ def edit(user_id):
             for field in fields:
                 setattr(user, field, user_data[field])
     return render_template('users/edit.html',
-                         user_data=user,
-                         roles=role_repository.all())
+                            user_data=user,
+                            roles=role_repository.all())

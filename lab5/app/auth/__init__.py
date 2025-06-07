@@ -2,12 +2,15 @@ from flask import Blueprint, request, render_template, url_for, flash, redirect,
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from functools import wraps
 from .checkers import check_password
+
 from .policies.users_policy import UsersPolicy
+from .policies.visit_logs_policy import VisitLogsPolicy
 
 from ..repositories import get_repository
 
 policies = {
-    'users': UsersPolicy
+    'users': UsersPolicy,
+    'visit_logs': VisitLogsPolicy
 }
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')

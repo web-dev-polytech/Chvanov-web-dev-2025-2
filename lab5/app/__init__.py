@@ -1,4 +1,6 @@
-from flask import Flask, render_template
+from functools import wraps
+
+from flask import Flask, render_template, request
 from flask_migrate import Migrate
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -25,10 +27,38 @@ def create_app(test_config=None):
     login_manager.init_app(app)
     app.jinja_env.globals['user_allowed'] = user_allowed
 
-    from . import users
-    app.register_blueprint(users.bp)
+    from .users import bp, index
+    app.register_blueprint(bp)
 
+    from .visit_logs import bp
+    app.register_blueprint(bp)
+    
     app.errorhandler(SQLAlchemyError)(database_error)
-    app.route('/', endpoint='index')(users.index)
+    app.route('/', endpoint='index')(index)
+
+    from .repositories import get_repository
+    from flask_login import current_user
+    import re
+    visit_log_repository = get_repository('visit_logs')
+    @app.before_request
+    def log_visit():
+        excluded_patterns = [
+            r'^/static/',
+            r'/delete$',
+            r'/logout$',
+            r'\.ico$',
+            r'\.css$',
+            r'\.js$',
+            r'\.png$|\.jpg$|\.gif$'
+        ]
+        if request.method != 'GET':
+            return
+        for pattern in excluded_patterns:
+            if re.search(pattern, request.path):
+                return
+        user_id = None
+        if current_user.is_authenticated:
+            user_id = current_user.id
+        visit_log_repository.create(request.path, user_id)
 
     return app

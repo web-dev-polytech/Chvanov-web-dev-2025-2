@@ -1,26 +1,25 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import joinedload
 from typing import Optional, List
+from .base_repository import Pagination
 
+from .base_repository import BaseRepository
 from ..models import User
 
-class UserRepository:
-    def __init__(self, db_connector: SQLAlchemy):
-        self.db_connector = db_connector
-
-    def _get_one(self, model, **kwargs) -> Optional[User]:
-        query = self.db_connector.select(model).filter_by(**kwargs)
-        return self.db_connector.session.execute(query).scalar_one_or_none()
-
+class UserRepository(BaseRepository):
+    model = User
+    order_by = (User.created_at.desc(), User.last_name.asc(), User.first_name.asc(), User.middle_name.asc())
+    
     def get_by_id(self, user_id: int) -> Optional[User]:
-        return self._get_one(User, id=user_id)
+        return self._get_one(id=user_id)
 
     def get_by_login(self, login: str) -> Optional[User]:
-        return self._get_one(User, login=login)
+        return self._get_one(login=login)
 
-    def all(self) -> List[User]:
-        query = self.db_connector.select(User).options(joinedload(User.role))
-        return self.db_connector.session.execute(query).scalars().all()
+    def all(self, pagination: Pagination = None, sort: bool = False) -> List[User]:
+        order_by = None
+        if sort:
+            order_by = self.order_by
+        users = self._get_all(pagination=pagination, order_by=order_by)
+        return users
 
     def create(self, login: str, password: str, first_name: str, middle_name: Optional[str], last_name: str, role_id: int) -> User:
         user = User(
@@ -71,7 +70,3 @@ class UserRepository:
             user.set_password(new_password)
             self.db_connector.session.commit()
         return user
-    
-    def rollback(self):
-        self.db_connector.session.rollback()
-
