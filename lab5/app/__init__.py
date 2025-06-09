@@ -40,8 +40,15 @@ def create_app(test_config=None):
     from flask_login import current_user
     import re
     visit_log_repository = get_repository('visit_logs')
+
+    app_endpoints = [rule.endpoint for rule in app.url_map.iter_rules()]
+
     @app.before_request
     def log_visit():
+        if request.method != 'GET':
+            return
+        if request.endpoint not in app_endpoints:
+            return
         excluded_patterns = [
             r'^/static/',
             r'/delete$',
@@ -51,8 +58,6 @@ def create_app(test_config=None):
             r'\.js$',
             r'\.png$|\.jpg$|\.gif$'
         ]
-        if request.method != 'GET':
-            return
         for pattern in excluded_patterns:
             if re.search(pattern, request.path):
                 return

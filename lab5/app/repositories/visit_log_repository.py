@@ -1,7 +1,8 @@
-from typing import Optional, List, Union
+from typing import Optional, List
+
 from .base_repository import Pagination
 
-from .base_repository import BaseRepository
+from .base_repository import BaseRepository, func
 from ..models import VisitLog, User
 
 class VisitLogsRepository(BaseRepository):
@@ -26,3 +27,31 @@ class VisitLogsRepository(BaseRepository):
         self.db_connector.session.add(visit_log)
         self.db_connector.session.commit()
         return visit_log
+
+    def get_pages_visits_paged(self) -> tuple[Pagination, List[tuple]]:
+        query = (
+            self.db_connector.select(
+                VisitLog.path,
+                func.count(VisitLog.id).label('visit_count')
+            )
+            .group_by(VisitLog.path)
+            .order_by(func.count(VisitLog.id).desc())
+        )
+        pagination = self._complex_query_pagination(query)
+        return pagination, pagination.items
+
+    def get_users_visits_paged(self) -> tuple[Pagination, List[tuple]]:
+        query = (
+            self.db_connector.select(
+                func.coalesce(
+                    func.concat(User.last_name, ' ', User.first_name, ' ', func.coalesce(User.middle_name, '')),
+                    'Неаутентифицированный пользователь'
+                ).label('full_name'),
+                func.count(VisitLog.id).label('visit_count')
+            )
+            .outerjoin(User, VisitLog.user_id == User.id)
+            .group_by(VisitLog.user_id)
+            .order_by(func.count(VisitLog.id).desc())
+        )
+        pagination = self._complex_query_pagination(query)
+        return pagination, pagination.items

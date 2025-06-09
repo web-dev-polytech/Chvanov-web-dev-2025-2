@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% from 'render_pagination.html' import render_pagination %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+  <h1>Количество посещений по страницам</h1>
+  <a href="{{ url_for('visit_logs.index') }}" class="btn btn-secondary">
+    ← Вернуться к журналу посещений
+  </a>
+</div>
+{% if pages_visits|length == 0 %}
+  <div class="alert alert-info" role="alert">
+    <strong>Журнал посещений пуст.</strong> Здесь будут отображаться записи о количестве посещений по страницам.
+  </div>
+{% else %}
+  <table class="table table-hover">
+    <thead>
+      <tr>
+          <th style="width: 80px;"> № </th>
+          <th> Страница </th>
+          <th style="width: 180px;"> Количество посещений </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for page_visits in pages_visits %}
+        <tr>
+            <td> {{ (pagination.page - 1) * pagination.per_page + loop.index }} </td>
+            <td> {{ page_visits[0] }} </td>
+            <td> {{ page_visits[1] }} </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {{ render_pagination(pagination, 'visit_logs.pages_visits') }}
+{% endif %}
+{% endblock %}

@@ -3,7 +3,19 @@
 {% from 'render_pagination.html' import render_pagination %}
 
 {% block content %}
-<h1 class="mt-4 mb-3">Журнал посещений</h1>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+  <h1>Журнал посещений</h1>
+  {% if user_allowed('visit_logs', 'show_statistics_page') %}
+    <div>
+      <a href="{{ url_for('visit_logs.pages_visits') }}" class="btn btn-statistics">
+        Посещения по страницам
+      </a>
+      <a href="{{ url_for('visit_logs.users_visits') }}" class="btn btn-statistics">
+        Посещения по пользователям
+      </a>
+    </div>
+  {% endif %}
+</div>
 {% if logs|length == 0 %}
   <div class="alert alert-info" role="alert">
     <strong>Журнал посещений пуст.</strong> Здесь будут отображаться записи о посещениях страниц пользователями.

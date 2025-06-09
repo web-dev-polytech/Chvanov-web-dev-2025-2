@@ -41,6 +41,7 @@ class User(Base, UserMixin):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=sqlalchemy.sql.func.now(), nullable=False)
 
     role_id: Mapped[int] = mapped_column(ForeignKey('roles.id'), nullable=False)
+
     role: Mapped["Role"] = relationship("Role", back_populates="users")
     visit_logs: Mapped[List["VisitLog"]] = relationship("VisitLog", back_populates="user")
 
@@ -65,6 +66,7 @@ class VisitLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=sqlalchemy.sql.func.now(), nullable=False)
 
     user_id: Mapped[Optional[int]] = mapped_column(ForeignKey('users.id'), nullable=True)
+
     user: Mapped[Optional["User"]] = relationship("User", back_populates="visit_logs")
 
     @property

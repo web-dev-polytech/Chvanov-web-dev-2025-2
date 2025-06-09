@@ -20,3 +20,21 @@ def index():
     return render_template('visit_logs/index.html',
                             pagination=pagination,
                             logs=logs)
+
+@bp.route('/pages_visits')
+@login_required
+@check_rights('visit_logs', 'show_statistics_page')
+def pages_visits():
+    pagination, pages_visits = visit_log_repository.get_pages_visits_paged()
+    return render_template('visit_logs/pages_visits.html',
+                            pagination=pagination,
+                            pages_visits=pages_visits)
+
+@bp.route('/users_visits')
+@login_required
+@check_rights('visit_logs', 'show_statistics_page')
+def users_visits():
+    pagination, users_visits = visit_log_repository.get_users_visits_paged()
+    return render_template('visit_logs/users_visits.html',
+                            pagination=pagination,
+                            users_visits=users_visits)
