@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
 
 from ..repositories import get_repository
@@ -30,6 +30,22 @@ def pages_visits():
                             pagination=pagination,
                             pages_visits=pages_visits)
 
+@bp.route('/pages_visits/download')
+@login_required
+@check_rights('visit_logs', 'show_statistics_page')
+def download_pages_visits():
+    try:
+        buffer, filename = visit_log_repository.export_table('pages_visits')
+        return send_file(
+            buffer, 
+            as_attachment=True, 
+            download_name=filename,
+            mimetype='text/csv'
+        )
+    except Exception as e:
+        flash(f"Error generating CSV: {str(e)}", 'danger')
+        return redirect(url_for('visit_logs.pages_visits'))
+
 @bp.route('/users_visits')
 @login_required
 @check_rights('visit_logs', 'show_statistics_page')
@@ -38,3 +54,19 @@ def users_visits():
     return render_template('visit_logs/users_visits.html',
                             pagination=pagination,
                             users_visits=users_visits)
+
+@bp.route('/users_visits/download')
+@login_required
+@check_rights('visit_logs', 'show_statistics_page')
+def download_users_visits():
+    try:
+        buffer, filename = visit_log_repository.export_table('users_visits')
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='text/csv'
+        )
+    except Exception as e:
+        flash(f"Error generating CSV: {str(e)}", 'danger')
+        return redirect(url_for('visit_logs.users_visits'))

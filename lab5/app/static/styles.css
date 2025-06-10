@@ -67,7 +67,7 @@ main {
     background-color: #e9ecef;
     border-color: #dee2e6;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .pagination strong {
@@ -84,7 +84,7 @@ main {
     font-size: 0.95rem;
     font-weight: 600;
     margin: 0 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .pagination .ellipsis {

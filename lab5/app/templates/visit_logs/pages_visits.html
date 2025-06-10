@@ -33,5 +33,6 @@
     </tbody>
   </table>
   {{ render_pagination(pagination, 'visit_logs.pages_visits') }}
+  <a href="{{ url_for('visit_logs.download_pages_visits') }}" class="btn btn-primary">Экспорт в CSV</a>
 {% endif %}
 {% endblock %}
