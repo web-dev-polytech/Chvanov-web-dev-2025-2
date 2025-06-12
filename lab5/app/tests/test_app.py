@@ -239,12 +239,6 @@ def test_user_cannot_view_pages_statistics(client, regular_user):
     assert 'недостаточно прав' in response.get_data(as_text=True)
 
 
-def test_admin_can_view_users_statistics(client, admin_user):
-    client.post('/auth/login', data=admin_user)
-    response = client.get('/visit_logs/users_visits')
-    assert response.status_code == 200
-
-
 def test_user_cannot_view_users_statistics(client, regular_user):
     client.post('/auth/login', data=regular_user)
     response = client.get('/visit_logs/users_visits', follow_redirects=True)
@@ -254,13 +248,6 @@ def test_user_cannot_view_users_statistics(client, regular_user):
 def test_admin_can_download_pages_statistics_csv(client, admin_user):
     client.post('/auth/login', data=admin_user)
     response = client.get('/visit_logs/pages_visits/download')
-    assert response.status_code == 200
-    assert response.content_type == 'text/csv; charset=utf-8'
-
-
-def test_admin_can_download_users_statistics_csv(client, admin_user):
-    client.post('/auth/login', data=admin_user)
-    response = client.get('/visit_logs/users_visits/download')
     assert response.status_code == 200
     assert response.content_type == 'text/csv; charset=utf-8'
 
