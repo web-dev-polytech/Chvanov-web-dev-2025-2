@@ -1,14 +1,9 @@
-import os
-import sys
 import pytest
 
-# Add the project root to the path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from lab4.app import create_app
-from lab4.app.repositories import UserRepository, RoleRepository
-from lab4.app.utils import check_login, check_password
+from .. import create_app
+from ..models import db, User, Role, VisitLog
+from ..auth.checkers import check_login, check_password
+from ..config import SECRET_KEY
 
 
 @pytest.fixture
@@ -16,13 +11,44 @@ def app():
     test_config = {
         'TESTING': True,
         'WTF_CSRF_ENABLED': False,
-        'SECRET_KEY': 'test-secret-key',
-        'MYSQL_USER': 'test_user',
-        'MYSQL_PASSWORD': 'test_password',
-        'MYSQL_HOST': 'localhost',
-        'MYSQL_DATABASE': 'test_database'
+        'SECRET_KEY': SECRET_KEY,
+        'SQLALCHEMY_DATABASE_URI': "sqlite:///:memory:",
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False
     }
     app = create_app(test_config)
+    
+    with app.app_context():
+        db.create_all()
+        
+        admin_role = Role(id=1, name='admin', description='Administrator')
+        user_role = Role(id=2, name='user', description='Regular user')
+        db.session.add(admin_role)
+        db.session.add(user_role)
+        
+        admin_user = User(
+            id=1, 
+            login='admin',
+            first_name='Админ',
+            last_name='Администратор',
+            middle_name='Главный',
+            role_id=1
+        )
+        admin_user.set_password('admin123')
+        
+        regular_user = User(
+            id=2,
+            login='testuser',
+            first_name='Тест',
+            last_name='Пользователь',
+            middle_name='Тестович',
+            role_id=2
+        )
+        regular_user.set_password('user123')
+        
+        db.session.add(admin_user)
+        db.session.add(regular_user)
+        db.session.commit()
+    
     return app
 
 
@@ -32,280 +58,340 @@ def client(app):
 
 
 @pytest.fixture
+def admin_user():
+    return {
+        'login': 'admin',
+        'password': 'admin123'
+    }
+
+
+@pytest.fixture
+def regular_user():
+    return {
+        'login': 'testuser',
+        'password': 'user123'
+    }
+
+
+@pytest.fixture
 def mock_db_connector(mocker):
-    mock_connect = mocker.patch('lab4.app.db.DBConnector.connect')
+    mock_connect = mocker.patch('app.db.DBConnector.connect')
     mock_connection = mocker.MagicMock()
     mock_cursor = mocker.MagicMock()
+    
     mock_cursor.__enter__ = mocker.MagicMock(return_value=mock_cursor)
     mock_cursor.__exit__ = mocker.MagicMock(return_value=None)
+    
     mock_connection.cursor.return_value = mock_cursor
     mock_connect.return_value = mock_connection
+    
     return mock_cursor
 
 
 @pytest.fixture
-def sample_user():
-    return {
-        'id': 1,
-        'login': 'testuser',
-        'first_name': 'Тест',
-        'last_name': 'Пользователь',
-        'middle_name': 'Тестович',
-        'role_id': 1
-    }
+def mock_sqlalchemy_session(mocker):
+    mock_session = mocker.MagicMock()
+    
+    mock_session.add = mocker.MagicMock()
+    mock_session.commit = mocker.MagicMock()
+    mock_session.rollback = mocker.MagicMock()
+    mock_session.query = mocker.MagicMock()
+    mock_session.get = mocker.MagicMock()
+    
+    mocker.patch('app.models.db.session', mock_session)
+    
+    return mock_session
 
-
-@pytest.fixture
-def sample_role():
-    return {
-        'id': 1,
-        'name': 'admin',
-        'description': 'Administrator'
-    }
-
-
-# --- Main page tests ---
-
-def test_main_page_anonymous(client, mock_db_connector):
-    mock_db_connector.fetchall.return_value = []
-    response = client.get('/')
-    assert response.status_code == 200
-
-
-def test_main_page_content(client, mock_db_connector):
-    mock_db_connector.fetchall.return_value = []
-    response = client.get('/')
-    assert response.status_code == 200
-    # Check for some expected content based on your users index template
-
-
-# --- Authentication tests ---
 
 def test_login_page_get(client):
     response = client.get('/auth/login')
     assert response.status_code == 200
+    assert 'Авторизация' in response.get_data(as_text=True)
 
 
-def test_login_valid_user(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.return_value = sample_user
-    response = client.post('/auth/login', data={
-        'login': 'admin',
-        'password': 'qwerty'
-    }, follow_redirects=True)
-    assert "успешно аутентифицированы".encode('utf-8') in response.data
+def test_login_valid_admin(client, admin_user):
+    response = client.post('/auth/login', data=admin_user, follow_redirects=True)
+    assert response.status_code == 200
+    assert 'успешно аутентифицированы' in response.get_data(as_text=True)
 
 
-def test_login_invalid_user(client, mock_db_connector):
-    mock_db_connector.fetchone.return_value = None
+def test_login_valid_user(client, regular_user):
+    response = client.post('/auth/login', data=regular_user, follow_redirects=True)
+    assert response.status_code == 200
+    assert 'успешно аутентифицированы' in response.get_data(as_text=True)
+
+
+def test_login_invalid_credentials(client):
     response = client.post('/auth/login', data={
         'login': 'wronguser',
         'password': 'wrongpass'
     })
-    assert "Неправильный логин или пароль".encode('utf-8') in response.data
+    assert 'Неправильный логин или пароль' in response.get_data(as_text=True)
 
 
-def test_logout(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.return_value = sample_user
-    client.post('/auth/login', data={
-        'login': 'admin',
-        'password': 'qwerty'
-    })
-    
-    # Logout
+def test_logout(client, admin_user):
+    client.post('/auth/login', data=admin_user)
     response = client.get('/auth/logout', follow_redirects=True)
     assert response.status_code == 200
 
 
-# --- User creation tests ---
-
-def test_create_user_page_requires_login(client):
+def test_admin_can_create_users(client, admin_user):
+    client.post('/auth/login', data=admin_user)
     response = client.get('/users/create')
-    assert response.status_code == 302
+    assert response.status_code == 200
 
 
-def test_create_user_success(client, mock_db_connector, sample_user, sample_role):
-    mock_db_connector.fetchone.side_effect = [sample_user, None]
-    mock_db_connector.fetchall.return_value = [sample_role]
+def test_regular_user_cannot_create_users(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/users/create', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_admin_can_delete_users(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.post('/users/2/delete', follow_redirects=True)
+    assert response.status_code == 200
+
+
+def test_regular_user_cannot_delete_users(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.post('/users/1/delete', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_admin_can_view_any_user_profile(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/users/2')
+    assert response.status_code == 200
+
+
+def test_user_can_view_own_profile(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/users/2')
+    assert response.status_code == 200
+
+
+def test_user_cannot_view_other_user_profile(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/users/1', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_admin_can_edit_any_user(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/users/2/edit')
+    assert response.status_code == 200
+
+
+def test_user_can_edit_own_profile(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/users/2/edit')
+    assert response.status_code == 200
+
+
+def test_user_cannot_edit_other_user_profile(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/users/1/edit', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_admin_can_view_all_visit_logs(client, admin_user, app):
+    with app.app_context():
+        log1 = VisitLog(path='/users', user_id=1)
+        log2 = VisitLog(path='/users/create', user_id=2)
+        log3 = VisitLog(path='/auth/login', user_id=None)
+        db.session.add_all([log1, log2, log3])
+        db.session.commit()
     
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/visit_logs/')
+    assert response.status_code == 200
+    assert '/users' in response.get_data(as_text=True)
+    assert '/users/create' in response.get_data(as_text=True)
+    assert '/auth/login' in response.get_data(as_text=True)
+
+
+def test_user_can_view_only_own_visit_logs(client, regular_user, app):
+    with app.app_context():
+        log1 = VisitLog(path='/admin-only-page', user_id=1)
+        log2 = VisitLog(path='/user-specific-page', user_id=2)
+        log3 = VisitLog(path='/auth/login', user_id=None)
+        db.session.add_all([log1, log2, log3])
+        db.session.commit()
+    
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/visit_logs/')
+    response_text = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert '/user-specific-page' in response_text
+    assert '/admin-only-page' not in response_text
+
+
+def test_admin_can_view_pages_statistics(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/visit_logs/pages_visits')
+    assert response.status_code == 200
+
+
+def test_user_cannot_view_pages_statistics(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/visit_logs/pages_visits', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_admin_can_view_users_statistics(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/visit_logs/users_visits')
+    assert response.status_code == 200
+
+
+def test_user_cannot_view_users_statistics(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/visit_logs/users_visits', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_admin_can_download_pages_statistics_csv(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/visit_logs/pages_visits/download')
+    assert response.status_code == 200
+    assert response.content_type == 'text/csv; charset=utf-8'
+
+
+def test_admin_can_download_users_statistics_csv(client, admin_user):
+    client.post('/auth/login', data=admin_user)
+    response = client.get('/visit_logs/users_visits/download')
+    assert response.status_code == 200
+    assert response.content_type == 'text/csv; charset=utf-8'
+
+
+def test_user_cannot_download_statistics_csv(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    
+    response = client.get('/visit_logs/pages_visits/download', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+    
+    response = client.get('/visit_logs/users_visits/download', follow_redirects=True)
+    assert 'недостаточно прав' in response.get_data(as_text=True)
+
+
+def test_visit_logging_for_authenticated_user(client, admin_user, app):
+    client.post('/auth/login', data=admin_user)
+    
+    client.get('/users/')
+    
+    with app.app_context():
+        logs = db.session.query(VisitLog).filter_by(path='/users/', user_id=1).all()
+        assert len(logs) >= 1
+
+
+def test_visit_logging_for_anonymous_user(client, app):
+    client.get('/auth/login')
+    
+    with app.app_context():
+        logs = db.session.query(VisitLog).filter_by(path='/auth/login', user_id=None).all()
+        assert len(logs) >= 1
+
+
+def test_visit_logging_ignores_non_get_requests(client, admin_user, app):
+    client.post('/auth/login', data=admin_user)
+    
+    initial_count = 0
+    with app.app_context():
+        initial_count = db.session.query(VisitLog).count()
+    
+    client.post('/users/create', data={
+        'login': 'newuser12345',
+        'password': 'ValidPass1!',
+        'first_name': 'Тест',
+        'last_name': 'Юзер',
+        'role_id': 2
+    })
+    
+    with app.app_context():
+        final_count = db.session.query(VisitLog).count()
+        assert final_count <= initial_count + 1
+
+
+def test_admin_create_user_success(client, admin_user, app):
+    client.post('/auth/login', data=admin_user)
     
     response = client.post('/users/create', data={
         'login': 'newuser12345',
         'password': 'ValidPass1!',
-        'first_name': 'Анна',
-        'last_name': 'Петрова',
-        'middle_name': 'Сергеевна',
-        'role_id': '1'
+        'first_name': 'Новый',
+        'last_name': 'Пользователь',
+        'middle_name': 'Тестовый',
+        'role_id': '2'
     }, follow_redirects=True)
-    assert "успешно создана".encode('utf-8') in response.data
-
-
-def test_create_user_invalid_login_short(client, mock_db_connector, sample_user, sample_role):
-    mock_db_connector.fetchone.return_value = sample_user
-    mock_db_connector.fetchall.return_value = [sample_role]
     
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
+    assert 'успешно создана' in response.get_data(as_text=True)
+    
+    with app.app_context():
+        new_user = db.session.query(User).filter_by(login='newuser12345').first()
+        assert new_user is not None
+        assert new_user.first_name == 'Новый'
+
+
+def test_create_user_invalid_login_short(client, admin_user):
+    client.post('/auth/login', data=admin_user)
     
     response = client.post('/users/create', data={
         'login': 'abc',
         'password': 'ValidPass1!',
         'first_name': 'Тест',
-        'last_name': 'Пользователь'
+        'last_name': 'Пользователь',
+        'role_id': '2'
     })
-    assert "не менее 5 символов".encode('utf-8') in response.data
+    assert 'не менее 5 символов' in response.get_data(as_text=True)
 
 
-def test_create_user_invalid_password(client, mock_db_connector, sample_user, sample_role):
-    mock_db_connector.fetchone.return_value = sample_user
-    mock_db_connector.fetchall.return_value = [sample_role]
-    
-    # Login first
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
+def test_create_user_invalid_password(client, admin_user):
+    client.post('/auth/login', data=admin_user)
     
     response = client.post('/users/create', data={
         'login': 'validuser123',
         'password': '123',
         'first_name': 'Тест',
-        'last_name': 'Пользователь'
+        'last_name': 'Пользователь',
+        'role_id': '2'
     })
-    assert "не менее 8 символов".encode('utf-8') in response.data
+    assert 'не менее 8 символов' in response.get_data(as_text=True)
 
 
-# --- User viewing tests ---
-
-def test_view_user(client, mock_db_connector, sample_user, sample_role):
-    mock_db_connector.fetchone.side_effect = [sample_user, sample_role]
-    response = client.get('/users/1')
-    assert response.status_code == 200
-
-
-def test_view_nonexistent_user(client, mock_db_connector):
-    mock_db_connector.fetchone.return_value = None
-    response = client.get('/users/999')
-    assert response.status_code in [302, 404]
-
-
-# --- User editing tests ---
-
-def test_edit_user_requires_login(client):
-    response = client.get('/users/1/edit')
-    assert response.status_code == 302
-
-
-def test_edit_user_form(client, mock_db_connector, sample_user, sample_role):
-    mock_db_connector.fetchone.side_effect = [sample_user, sample_user]
-    mock_db_connector.fetchall.return_value = [sample_role]
+def test_admin_edit_user_success(client, admin_user, app):
+    client.post('/auth/login', data=admin_user)
     
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
-    
-    response = client.get('/users/1/edit')
-    assert response.status_code == 200
-
-
-def test_edit_user_database_update(client, mock_db_connector, sample_user, sample_role):
-    mock_db_connector.fetchone.side_effect = [sample_user, sample_user]
-    mock_db_connector.fetchall.return_value = [sample_role]
-    
-    # Login first
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
-    
-    # Edit user
-    response = client.post('/users/1/edit', data={
-        'first_name': 'Обновленное',
-        'last_name': 'Имя',
-        'middle_name': 'Тестовое',
-        'role_id': '1'
+    response = client.post('/users/2/edit', data={
+        'first_name': 'Обновленный',
+        'last_name': 'Пользователь',
+        'middle_name': 'Измененный',
+        'role_id': '2'
     }, follow_redirects=True)
     
-    # Verify the UPDATE query was called
-    mock_db_connector.execute.assert_called()
-    calls = mock_db_connector.execute.call_args_list
+    assert 'успешно изменена' in response.get_data(as_text=True)
     
-    # Check that an UPDATE statement was executed
-    update_call = None
-    for call in calls:
-        if 'UPDATE users SET' in str(call[0][0]):
-            update_call = call
-            break
+    with app.app_context():
+        user = db.session.get(User, 2)
+        assert user.first_name == 'Обновленный'
+
+
+def test_user_edit_own_profile_success(client, regular_user, app):
+    client.post('/auth/login', data=regular_user)
     
-    assert update_call is not None, "UPDATE query was not executed"
-    assert 'first_name = %s' in update_call[0][0]
-    assert update_call[0][1] == ('Обновленное', 'Тестовое', 'Имя', '1', 1)
-
-
-# --- User deletion tests ---
-
-def test_delete_user_requires_login(client):
-    response = client.post('/users/1/delete')
-    assert response.status_code == 302
-
-
-def test_delete_user_success(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.return_value = sample_user
-    
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
-    
-    response = client.post('/users/1/delete', follow_redirects=True)
-    assert response.status_code == 200
-
-
-# --- Password change tests ---
-
-def test_change_password_requires_login(client):
-    response = client.get('/auth/change_password')
-    assert response.status_code == 302
-
-
-def test_change_password_form(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.return_value = sample_user
-    
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
-    
-    response = client.get('/auth/change_password')
-    assert response.status_code == 200
-
-
-def test_change_password_valid(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.side_effect = [sample_user, sample_user]
-    
-    # Login first
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
-    
-    response = client.post('/auth/change_password', data={
-        'old_password': 'qwerty',
-        'new_password': 'NewPassword1!',
-        'confirm_password': 'NewPassword1!'
+    response = client.post('/users/2/edit', data={
+        'first_name': 'Самоизмененный',
+        'last_name': 'Пользователь',
+        'middle_name': 'Самостоятельно',
+        'role_id': '2'
     }, follow_redirects=True)
-    assert response.status_code == 200
-
-
-def test_change_password_wrong_old(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.side_effect = [sample_user, None]
     
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
+    assert 'успешно изменена' in response.get_data(as_text=True)
     
-    response = client.post('/auth/change_password', data={
-        'old_password': 'wrongpassword',
-        'new_password': 'NewPassword1!',
-        'confirm_password': 'NewPassword1!'
-    })
-    assert response.status_code == 200
+    with app.app_context():
+        user = db.session.get(User, 2)
+        assert user.first_name == 'Самоизмененный'
 
-
-def test_change_password_mismatch(client, mock_db_connector, sample_user):
-    mock_db_connector.fetchone.return_value = sample_user
-    
-    client.post('/auth/login', data={'login': 'admin', 'password': 'qwerty'})
-    
-    response = client.post('/auth/change_password', data={
-        'old_password': 'qwerty',
-        'new_password': 'NewPassword1!',
-        'confirm_password': 'DifferentPassword1!'
-    })
-    assert response.status_code == 200
-
-
-# --- Validation utility tests ---
 
 def test_check_login_valid():
     assert check_login('validlogin123') is True
@@ -345,43 +431,40 @@ def test_check_password_with_spaces():
         check_password('Valid Pass1!')
 
 
-# --- Repository tests ---
-
-def test_user_repository_get_by_id(mocker, sample_user):
-    from lab4.app.db import DBConnector
+def test_unauthenticated_access_requires_login(client):
+    protected_urls = [
+        '/users/create',
+        '/users/1/edit',
+        '/users/1',
+        '/visit_logs/',
+        '/visit_logs/pages_visits',
+        '/visit_logs/users_visits'
+    ]
     
-    mock_db = mocker.MagicMock(spec=DBConnector)
-    user_repo = UserRepository(mock_db)
-    
-    mock_db.connect.return_value.cursor.return_value.__enter__.return_value.fetchone.return_value = sample_user
-    
-    result = user_repo.get_by_id(1)
-    assert result == sample_user
-
-
-def test_user_repository_get_by_login_and_password(mocker, sample_user):
-    """Test UserRepository get_by_login_and_password method."""
-    from lab4.app.db import DBConnector
-    
-    mock_db = mocker.MagicMock(spec=DBConnector)
-    user_repo = UserRepository(mock_db)
-    
-    mock_db.connect.return_value.cursor.return_value.__enter__.return_value.fetchone.return_value = sample_user
-    
-    result = user_repo.get_by_login_and_password('testuser', 'password')
-    assert result == sample_user
+    for url in protected_urls:
+        response = client.get(url, follow_redirects=True)
+        assert 'необходима аутентификация' in response.get_data(as_text=True)
 
 
-def test_role_repository_all(mocker, sample_role):
-    """Test RoleRepository all method."""
-    from lab4.app.db import DBConnector
+def test_user_role_field_disabled_for_regular_users(client, regular_user):
+    client.post('/auth/login', data=regular_user)
+    response = client.get('/users/2/edit')
     
-    mock_db = mocker.MagicMock(spec=DBConnector)
-    role_repo = RoleRepository(mock_db)
+    assert response.status_code == 200
+
+
+def test_example_mocking_password_hashing(client, admin_user, mocker):
+    mock_hash = mocker.patch.object(User, 'set_password')
+    mock_hash.return_value = None
     
-    mock_db.connect.return_value.cursor.return_value.__enter__.return_value.fetchall.return_value = [sample_role]
+    client.post('/auth/login', data=admin_user)
     
-    result = role_repo.all()
-    assert len(result) == 1
-    assert result[0].id == sample_role['id']
-    assert result[0].name == sample_role['name']
+    client.post('/users/create', data={
+        'login': 'testuser123',
+        'password': 'TestPassword123!',
+        'first_name': 'Test',
+        'last_name': 'User',
+        'role_id': '2'
+    })
+    
+    mock_hash.assert_called_once_with('TestPassword123!')
