@@ -1,4 +1,4 @@
-from app.models import Category
+from ..models import Category
 
 class CategoryRepository:
     def __init__(self, db):

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, send_from_directory, current_app, abort
-from app.repositories import CategoryRepository, ImageRepository
-from app.models import db
+from .repositories import CategoryRepository, ImageRepository
+from .models import db
 
 category_repository = CategoryRepository(db)
 image_repository = ImageRepository(db)
