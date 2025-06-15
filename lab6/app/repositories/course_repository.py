@@ -25,7 +25,7 @@ class CourseRepository:
         
         return self.db.session.execute(self._all_query(name, category_ids)).scalars()
 
-    def get_course_by_id(self, course_id):
+    def get_course_by_id(self, course_id) -> Course:
         return self.db.session.get(Course, course_id)
     
     def new_course(self):
@@ -48,3 +48,8 @@ class CourseRepository:
             raise e  # Пробрасываем любое другое исключение
         
         return course
+
+    def rate_course(self, course_id, rating):
+        course = self.get_course_by_id(course_id)
+        course.rate(rating)
+        self.db.session.commit()

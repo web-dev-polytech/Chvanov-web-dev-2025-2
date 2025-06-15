@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_migrate import Migrate
+from flask_login import current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from .models import db
@@ -23,6 +24,8 @@ def create_app(test_config=None):
     migrate = Migrate(app, db)
 
     init_login_manager(app)
+
+    app.jinja_env.globals['current_user'] = current_user
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(courses_bp)

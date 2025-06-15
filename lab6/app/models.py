@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 from datetime import datetime
+from click import DateTime
 import sqlalchemy as sa
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import UserMixin
@@ -74,9 +75,14 @@ class Course(Base):
     author: Mapped["User"] = relationship()
     category: Mapped["Category"] = relationship(lazy=False)
     bg_image: Mapped["Image"] = relationship()
+    reviews: Mapped[list["Review"]] = relationship(back_populates="course")
 
     def __repr__(self):
         return '<Course %r>' % self.name
+
+    def rate(self, rating):
+        self.rating_sum += rating
+        self.rating_num += 1
 
     @property
     def rating(self):
@@ -106,3 +112,16 @@ class Image(db.Model):
     @property
     def url(self):
         return url_for('main.image', image_id=self.id)
+
+class Review(Base):
+    __tablename__ = 'reviews'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    rating: Mapped[int] = mapped_column(nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+    course: Mapped["Course"] = relationship()
+    user: Mapped["User"] = relationship()

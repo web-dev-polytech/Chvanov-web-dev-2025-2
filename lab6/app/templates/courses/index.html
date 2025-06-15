@@ -38,7 +38,14 @@
                     <div class="d-flex">
                         <h4 class="text-uppercase">{{ course.name }}</h4>
                         <p class="ms-auto rating">
-                            <span>★</span> <span>{{ "%.2f" | format(course.rating) }}</span>
+                            {% for i in range(1, 6) %}
+                                {% if i <= course.rating %}
+                                    <span class="text-warning">★</span>
+                                {% else %}
+                                    <span class="text-muted">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                            <span>{{ "%.2f" | format(course.rating) }}</span>
                         </p> 
                     </div>
                     <p class="text-muted my-3">{{ course.author.full_name }}</p>

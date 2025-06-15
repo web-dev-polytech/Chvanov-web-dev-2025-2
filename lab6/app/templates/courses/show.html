@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'courses/review_form.html' import render_review_form %}
 
 {% block content %}
 <div class="title-area position-relative" style="background-image: url({{ course.bg_image.url }});">
@@ -6,7 +7,15 @@
         <div class="m-auto">
             <h1 class="title mb-3 font-weight-bold">{{ course.name }}</h1>
             <p class="mb-3 mx-auto">
-                {{ course.category.name }} | <span>★</span> <span>{{ "%.2f" | format(course.rating) }}</span>
+                {{ course.category.name }}
+                {% for i in range(1, 6) %}
+                    {% if i <= course.rating %}
+                        <span class="text-warning">★</span>
+                    {% else %}
+                        <span class="text-white-50">☆</span>
+                    {% endif %}
+                {% endfor %}
+                <span>{{ "%.2f" | format(course.rating) }}</span>
             </p>
             <div class="container">
                 <p class="description w-75 mb-5 mx-auto">
@@ -61,6 +70,44 @@
                 </button>
             </div>
         {% endif %}
+    </section>
+
+    <section class="reviews mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="text-center text-uppercase font-weight-bold">Отзывы</h2>
+            <a href="{{ url_for('courses.reviews', course_id=course.id) }}" class="btn btn-outline-primary">
+                Все отзывы
+            </a>
+        </div>
+        <div class="reviews-list mb-4">
+            {% for review in reviews %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title">{{ review.user.full_name }}</h5>
+                            <span class="text-muted">{{ review.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</span>
+                        </div>
+                        <p class="card-text">{{ review.text }}</p>
+                        <p class="card-text">
+                            <small class="text-muted">Оценка: 
+                                {% for i in range(1, 6) %}
+                                    {% if i <= review.rating %}
+                                        <span class="text-warning">★</span>
+                                    {% else %}
+                                        <span class="text-muted">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                                ({{ review.rating }}/5)
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+            {% if reviews|length == 0 %}
+                <p class="text-muted text-center">Нет отзывов</p>
+            {% endif %}
+        </div>
+        {{ render_review_form(course.id, user_review) }}
     </section>
 </div>
 
