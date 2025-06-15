@@ -4,6 +4,7 @@ Homework*
 
 
 venv/
+media/
 config.py
 test_config.py
 secret_key.py
