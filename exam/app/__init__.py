@@ -4,9 +4,9 @@ from flask_login import current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from .models import db
-from .auth import bp as auth_bp, init_login_manager
-from .courses import bp as courses_bp
+from .auth import bp as auth_bp, init_login_manager, user_allowed
 from .routes import bp as main_bp
+from .events import bp as events_bp
 
 def handle_sqlalchemy_error(err):
     error_msg = ('Возникла ошибка при подключении к базе данных. '
@@ -26,10 +26,11 @@ def create_app(test_config=None):
     init_login_manager(app)
 
     app.jinja_env.globals['current_user'] = current_user
+    app.jinja_env.globals['user_allowed'] = user_allowed
 
     app.register_blueprint(auth_bp)
-    app.register_blueprint(courses_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(events_bp)
     app.errorhandler(SQLAlchemyError)(handle_sqlalchemy_error)
 
     return app
