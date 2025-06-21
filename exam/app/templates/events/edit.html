@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% from 'events/form_macro.html' import event_form %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Редактировать мероприятие</h1>
+        <p class="text-muted">{{ event.name }}</p>
+        
+        {{ event_form(event=event, show_image_upload=False) }}
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Текущее изображение</h5>
+            </div>
+            <div class="card-body">
+                {% if event.image %}
+                    <img src="{{ url_for('main.image', image_id=event.image) }}" 
+                         class="img-fluid rounded" alt="{{ event.name }}">
+                    <p class="text-muted mt-2">{{ event.image }}</p>
+                {% else %}
+                    <p class="text-muted">Изображение не загружено</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Информация</h5>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    Изображение было загружено при создании мероприятия и не может быть изменено.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('description'),
+        placeholder: 'Опишите ваше мероприятие подробно...',
+        spellChecker: false,
+        status: false,
+        toolbar: [
+            'bold', 'italic', 'heading', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', '|',
+            'preview', 'guide'
+        ]
+    });
+});
+</script>
+{% endblock %}

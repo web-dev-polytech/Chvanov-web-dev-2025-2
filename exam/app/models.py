@@ -55,9 +55,15 @@ class Event(Base):
 
 class Registration(Base):
     __tablename__ = 'registrations'
-
-    event_id: Mapped[int] = mapped_column(ForeignKey("events.id"), primary_key=True)
-    volunteer_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE"), 
+        primary_key=True
+    )
+    volunteer_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), 
+        primary_key=True
+    )
     contact_info: Mapped[str] = mapped_column(String(120), nullable=False)
     date: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     status: Mapped[RegistrationStatus] = mapped_column(
@@ -81,7 +87,10 @@ class User(Base, UserMixin):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     middle_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("roles.id", ondelete="RESTRICT"), 
+        nullable=False
+    )
 
     role: Mapped["Role"] = relationship(back_populates="users")
     registrations: Mapped[List["Registration"]] = relationship(back_populates="volunteer")
@@ -110,4 +119,4 @@ class Role(Base):
     users: Mapped[List["User"]] = relationship(back_populates="role")
 
     def __repr__(self):
-        return '<Role %r>' % self.name 
+        return '<Role %r>' % self.name

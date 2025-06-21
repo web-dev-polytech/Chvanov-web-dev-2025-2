@@ -9,14 +9,17 @@ class UserRepository(BaseRepository):
     def get_user_by_id(self, id: int) -> Optional[User]:
         users = self.get_all(id=id)
         return users[0] if users else None
-    
+
     def get_user_by_login(self, login: str) -> Optional[User]:
         users = self.get_all(login=login)
         return users[0] if users else None
-    
+
     def get_users_by_role(self, role_id: int):
         return self.get_all(role_id=role_id)
-    
+
+    def get_all_users(self):
+        return self.get_all()
+
     def create_user(self, login: str, password_hash: str, first_name: str, 
                    last_name: str, role_id: int, middle_name: str = None) -> User:
         user = self.create(

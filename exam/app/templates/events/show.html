@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Просмотр мероприятия</h1>
+<table class="table">
+    <tbody>
+        <tr>
+            <td>Название</td>
+            <td>{{ event.name }}</td>
+        </tr>
+        <tr>
+            <td>Дата</td>
+            <td>{{ event.date }}</td>
+        </tr>
+        <tr>
+            <td>Место</td>
+            <td>{{ event.location }}</td>
+        </tr>
+        <tr>
+            <td>Организатор</td>
+            <td>{{ event.organizer.full_name }}</td>
+        </tr>
+        <tr>
+            <td>Зарегистрировалось волонтёров</td>
+            <td>{{ event.volunteer_registered }}</td>
+        </tr>
+        <tr>
+            <td>Требуемое количество волонтёров</td>
+            <td>{{ event.volunteer_required }}</td>
+        </tr>
+        <tr>
+            <td>Статус</td>
+            <td>{{ event.status }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

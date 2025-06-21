@@ -1,24 +1,15 @@
-from flask import Blueprint, render_template, send_from_directory, current_app, abort
-from .repositories import CategoryRepository, ImageRepository
+from flask import Blueprint, redirect, url_for, send_from_directory, abort, current_app
 from .models import db
-
-category_repository = CategoryRepository(db)
-image_repository = ImageRepository(db)
 
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
-    categories = category_repository.get_all_categories()
-    return render_template(
-        'index.html',
-        categories=categories,
-    )
+    return redirect(url_for('events.index'))
 
 @bp.route('/images/<image_id>')
 def image(image_id):
-    img = image_repository.get_by_id(image_id)
-    if image is None:
+    if image_id is None:
         abort(404)
     return send_from_directory(current_app.config['UPLOAD_FOLDER'],
-                               img.storage_filename)
+                               image_id)

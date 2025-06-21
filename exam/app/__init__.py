@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_migrate import Migrate
 from flask_login import current_user
 from sqlalchemy.exc import SQLAlchemyError
+import os
 
 from .models import db
 from .auth import bp as auth_bp, init_login_manager, user_allowed
