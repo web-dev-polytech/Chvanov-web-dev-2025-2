@@ -161,11 +161,11 @@ def update(event_id):
         
     except IntegrityError as err:
         db.session.rollback()
-        flash('При сохранении данных возникла ошибка. Проверьте корректность введённых данных.', 'danger')
+        flash(f'При сохранении данных возникла ошибка. Проверьте корректность введённых данных. {str(err)}', 'danger')
         return render_template('events/edit.html', event=event)
     except Exception as err:
         db.session.rollback()
-        flash('При сохранении данных возникла ошибка. Проверьте корректность введённых данных.', 'danger')
+        flash(f'При сохранении данных возникла ошибка. Проверьте корректность введённых данных. {str(err)}', 'danger')
         return render_template('events/edit.html', event=event)
         
     flash(f'Мероприятие "{event.name}" было успешно обновлено!', 'success')
@@ -285,7 +285,7 @@ def create():
     except Exception as e:
         # Откатываем транзакцию в случае ошибки
         event_repository.rollback()
-        flash('При сохранении данных возникла ошибка. Проверьте корректность введённых данных.', 'danger')
+        flash(f'При сохранении данных возникла ошибка. Проверьте корректность введённых данных. {str(e)}', 'danger')
         return render_template('events/new.html',
             image=image,
             organizer_id=current_user.id
