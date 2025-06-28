@@ -286,7 +286,7 @@ def create():
         # Откатываем транзакцию в случае ошибки
         event_repository.rollback()
         flash('При сохранении данных возникла ошибка. Проверьте корректность введённых данных.', 'danger')
-        return render_template('events/new.html')
+        return render_template('events/new.html',
             image=image,
             organizer_id=current_user.id
         )
