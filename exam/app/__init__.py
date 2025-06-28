@@ -7,7 +7,7 @@ import os
 from .models import db
 from .auth import bp as auth_bp, init_login_manager, user_allowed
 from .routes import bp as main_bp
-from .events import bp as events_bp
+from .events_old import bp as events_bp
 
 def handle_sqlalchemy_error(err):
     error_msg = ('Возникла ошибка при подключении к базе данных. '
